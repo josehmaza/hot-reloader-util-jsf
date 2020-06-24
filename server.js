@@ -1,46 +1,53 @@
 const Obserser = require('./observer');
 const fs = require('fs-extra');  
 const fsNative = require('fs');
+const fsp = require('fs-promise');
 const random = '-random-'
+
+const config = {
+  folderToWatch:  'D:/Repositories/watcher-hot-reload/folder-1',
+  foldersToUpdate: [
+    'D:/Repositories/watcher-hot-reload/folder-2',
+    'D:/Repositories/watcher-hot-reload/ola/folder-random-/folder-x/folder-random-/folder-3',
+  ]
+}
+
+
 var obserser = new Obserser();
 
-const folderToWatch = 'D:/Repositories/watcher-hot-reload/folder-1';
-const destinoFolder = [
-  //'D:/Repositories/watcher-hot-reload/folder-2',
-  'D:/Repositories/watcher-hot-reload/ola/folder-random-/folder-x/folder-random-/folder-3',
-];
 obserser.on('file-updated', ({message: filePath}) => {
   //console.log(`Changed =>  ${filePath}`)
-  destinoFolder.forEach(destinoF => {
-    var destinoPath = getDestinoPathFrom(folderToWatch, filePath, destinoF);
-    console.log('El destino es ', destinoPath);
-    //replaceFile(filePath, destinoPath)
-  })
+  config.foldersToUpdate.forEach(destinoF => {
+    updateFiles(filePath, destinoF)
   
- // replaceFile(filePath, )
-// Async with callbacks:  
-  /*fs.copy('texto.txt', 'texto-image.txt', err => {  
-    if (err) return console.error(err)  
-    console.log('success!')  
-  });  */
+  })
+ 
 });
 
-var getDestinoPathFrom = (folderToWatch, origenFilePath, destino) => {
-  //let nuevoDestino = origenFilePath.replace(/\\/g, '/')//.replace(folderToWatch, destino)
+var updateFiles = async (filePath, destinoF) => {
+  var destinoPath = await getDestinoPathFrom(config.folderToWatch, filePath, destinoF);
+  replaceFile(filePath, destinoPath)
+}
+
+var getDestinoPathFrom = async (folderToWatch, origenFilePath, destino) => {
   let destinoFinal = destino.replace(/\\/g, '/')
+  origenFilePath = origenFilePath.replace(/\\/g, '/')
   if(destinoFinal.indexOf('-random-') !== -1) {
     // acceder a su carpeta padre
-    let destinoN = randomToPath(destinoFinal)
-    destinoFinal.replace(folderToWatch, destinoN)
+    let destinoN = await randomToPath(destinoFinal)
+   
+   // console.log(`El destino tenia random ${destinoFinal} y ahora es ${destinoN}`)
+    //console.log('el origen es ', origenFilePath)
+    destinoFinal= origenFilePath.replace(folderToWatch, destinoN)
 
   }else {
-    destinoFinal.replace(folderToWatch, destino)
+    destinoFinal = origenFilePath.replace(folderToWatch, destino)
   }
 
   
   return destinoFinal;
 }
-var randomToPath= (path) => {
+var randomToPath= async (path) => {
   let folderList = path.split('/')
   let parentFolder = []
   for(let folder of folderList){
@@ -49,27 +56,39 @@ var randomToPath= (path) => {
     if(folderActual.indexOf(random) !== -1){
       //obtener padre
       // obtener hijo
-      console.log('Buscare ', folder) 
-      console.log('padre ', parentFolder) 
-      folderActual = search(parentFolder.join('/'), folderActual.replace(random, ''))
+      //console.log('Buscare ', folder) 
+      //console.log('padre ', parentFolder) 
+      folderActual = await search(parentFolder.join('/'), folderActual.replace(random, ''))
     }
     parentFolder.push(folderActual)
   }
   return parentFolder.join('/')
 }
 var search = async (folder, folderToSearch) => {
-  fsNative.readdir(folder, function (err, files) {
+  try {
+    const files = await fsp.readdir(folder);
+    // uncomment to see files
+    /*files.forEach(function (file) {
+      // Do whatever you want to do with the file
+      console.log(file); 
+    });*/
+    let fileMatch = files.find(file => {
+      return file.indexOf(folderToSearch) != -1
+    })
+    //console.log(`Buscando ${folderToSearch} en la carpeta ${folder} = ${fileMatch}`)
+    return fileMatch;
+
+  } catch (e) {
+    console.log('error: ', e);
+  }
+
+  /*fsNative.readdir(folder, function (err, files) {
     //handling error
     if (err) {
         return console.log('Unable to scan directory: ' + err);
     } 
     //listing all files using forEach
-    /*try {
-      const names = await fsp.readdir('path/to/dir');
-      console.log(names[0]);
-    } catch (e) {
-      console.log('error: ', e);
-    }*/
+    
 
     files.forEach(function (file) {
         // Do whatever you want to do with the file
@@ -80,13 +99,13 @@ var search = async (folder, folderToSearch) => {
     })
     console.log(`Buscando ${folderToSearch} en la carpeta ${folder} = ${fileMatch}`)
     return fileMatch;
-});
+});*/
 }
 var replaceFile = (origen, destino) => {
   fs.copy(origen, destino, err => {  
     if (err) return console.error(err)  
-    console.log('success reload!')  
+    console.info(`[${new Date().toLocaleString()}] ${destino} reloaded`)  
   });  
 }
 
-obserser.watchFile(folderToWatch);
+obserser.watchFile(config.folderToWatch);
