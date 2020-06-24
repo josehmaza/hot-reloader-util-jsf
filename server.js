@@ -1,6 +1,5 @@
 const Obserser = require('./observer');
 const fs = require('fs-extra');  
-const fsNative = require('fs');
 const fsp = require('fs-promise');
 const random = '-random-'
 
@@ -82,24 +81,6 @@ var search = async (folder, folderToSearch) => {
     console.log('error: ', e);
   }
 
-  /*fsNative.readdir(folder, function (err, files) {
-    //handling error
-    if (err) {
-        return console.log('Unable to scan directory: ' + err);
-    } 
-    //listing all files using forEach
-    
-
-    files.forEach(function (file) {
-        // Do whatever you want to do with the file
-        console.log(file); 
-    });
-    let fileMatch = files.find(file => {
-      return file.indexOf(folderToSearch) != -1
-    })
-    console.log(`Buscando ${folderToSearch} en la carpeta ${folder} = ${fileMatch}`)
-    return fileMatch;
-});*/
 }
 var replaceFile = (origen, destino) => {
   fs.copy(origen, destino, err => {  
