@@ -4,10 +4,10 @@ const fsp = require('fs-promise');
 const random = '-random-'
 
 const config = {
-  folderToWatch:  'D:/Repositories/watcher-hot-reload/folder-1',
+  folderToWatch:  'D:/workspaces/workspace-analitix-2/reportes-bigdata-parent/utilitario-reportes-bigdata-jsf/src/main/resources/META-INF/resources',
   foldersToUpdate: [
-    'D:/Repositories/watcher-hot-reload/folder-2',
-    'D:/Repositories/watcher-hot-reload/ola/folder-random-/folder-x/folder-random-/folder-3',
+    'D:/workspaces/workspace-analitix-2/max-web-parent/max-web/src/main/webapp/resources',
+    'D:/Servidores/servers-max/server-analitix-2/standalone/tmp/vfs/deployment/deployment-random-/max-web--random-/resources',
   ]
 }
 
